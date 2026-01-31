@@ -22,10 +22,21 @@ class Viewport(QOpenGLWidget):
         self._press_pos = QPoint() # クリック判定用
         self._zoom = -10.0
         
+        # 表示設定
+        self._show_grid = False
+        
         # レイキャスティング用のキャッシュ
         self._last_modelview = None
-        self._last_projection = None
-        self._last_viewport = None
+
+    # @intent:operation グリッド表示のON/OFFを切り替えます。
+    def set_grid_visible(self, visible: bool):
+        self._show_grid = visible
+        self.update()
+
+    # @intent:operation 外部（スライダー等）からズームレベルを設定します。
+    def set_zoom(self, value: float):
+        self._zoom = value
+        self.update()
 
     def _on_model_changed(self, source):
         self.update()
@@ -64,6 +75,10 @@ class Viewport(QOpenGLWidget):
         
         selected_face = self._selection_manager.selected_face
 
+        # グリッドの描画 (モデルより奥に描画したい場合はここで)
+        if self._show_grid:
+            self._draw_grid()
+
         # モデルの描画
         glBegin(GL_QUADS)
         for face in self._model.faces:
@@ -94,6 +109,66 @@ class Viewport(QOpenGLWidget):
 
         # 座標軸インジケータの描画 (Overdraw)
         self._draw_axes_indicator()
+
+    # @intent:operation XZ平面にグリッドを描画し、空間スケールの把握を補助します。
+    def _draw_grid(self):
+        size = 20  # グリッドの範囲 (-20 ~ 20)
+        step = 1   # グリッドの間隔
+
+        glDisable(GL_LIGHTING)
+        glLineWidth(1.0)
+        
+        glBegin(GL_LINES)
+        
+        # 1. XZ平面 (Y=0) のグリッド (床)
+        glColor3f(0.5, 0.5, 0.5)
+        for i in range(-size, size + 1, step):
+            if i == 0: continue # 軸は別途描画するのでスキップ
+            
+            # X軸に平行な線
+            glVertex3f(-size, 0, i)
+            glVertex3f(size, 0, i)
+            
+            # Z軸に平行な線
+            glVertex3f(i, 0, -size)
+            glVertex3f(i, 0, size)
+
+        # 2. Y軸上の目盛り (X=0, Z=0 の位置に短い横棒)
+        # 床の交点から垂直に伸びる線は削除し、Y軸上の目盛りだけに絞る
+        glColor3f(0.7, 0.7, 0.7)
+        tick_size = 0.2 # 十字のサイズを小さく調整
+        for y in range(-size, size + 1, step):
+            if y == 0: continue
+            # X方向の目盛り
+            glVertex3f(-tick_size, y, 0)
+            glVertex3f(tick_size, y, 0)
+            # Z方向の目盛り
+            glVertex3f(0, y, -tick_size)
+            glVertex3f(0, y, tick_size)
+
+        glEnd()
+
+        # メインの軸線 (少し濃く太く)
+        glLineWidth(2.0)
+        glBegin(GL_LINES)
+        
+        # X軸 (赤みがかったグレー)
+        glColor3f(0.6, 0.4, 0.4)
+        glVertex3f(-size, 0, 0)
+        glVertex3f(size, 0, 0)
+        
+        # Y軸 (緑みがかったグレー)
+        glColor3f(0.4, 0.6, 0.4)
+        glVertex3f(0, -size, 0)
+        glVertex3f(0, size, 0)
+
+        # Z軸 (青みがかったグレー)
+        glColor3f(0.4, 0.4, 0.6)
+        glVertex3f(0, 0, -size)
+        glVertex3f(0, 0, size)
+        
+        glEnd()
+        glLineWidth(1.0)
 
     def _draw_axes_indicator(self):
         # 現在の投影行列等を保存

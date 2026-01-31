@@ -1,10 +1,15 @@
 from PySide6.QtWidgets import (QWidget, QVBoxLayout, QLabel, 
-                               QDoubleSpinBox, QFormLayout, QGroupBox, QHBoxLayout)
-from PySide6.QtCore import Qt
+                               QDoubleSpinBox, QFormLayout, QGroupBox, QHBoxLayout, QCheckBox, QSlider)
+from PySide6.QtCore import Qt, Signal
 from Core.data_model import Face
 
 # @intent:responsibility 数値入力とプロパティ編集を担当するウィジェット。
 class ControlPanel(QWidget):
+    # @intent:notification グリッド表示の切り替えを通知するシグナル
+    grid_visibility_changed = Signal(bool)
+    # @intent:notification ズームレベルの変更を通知するシグナル (値はカメラのZ位置)
+    zoom_level_changed = Signal(float)
+
     def __init__(self, model, selection_manager, parent=None):
         super().__init__(parent)
         self._model = model
@@ -25,6 +30,29 @@ class ControlPanel(QWidget):
         self._header_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self._header_label.setStyleSheet("font-weight: bold; font-size: 14px; margin-bottom: 10px;")
         layout.addWidget(self._header_label)
+
+        # 表示設定エリア
+        self._view_group = QGroupBox("View Settings")
+        view_layout = QVBoxLayout()
+        
+        # Grid Checkbox
+        self._check_grid = QCheckBox("Show Grid (Scale)")
+        self._check_grid.toggled.connect(self.grid_visibility_changed.emit)
+        view_layout.addWidget(self._check_grid)
+        
+        # Zoom Slider
+        zoom_layout = QHBoxLayout()
+        zoom_layout.addWidget(QLabel("Zoom:"))
+        self._zoom_slider = QSlider(Qt.Orientation.Horizontal)
+        # 範囲: -100 (遠い) ～ -2 (近い)
+        self._zoom_slider.setRange(-100, -2)
+        self._zoom_slider.setValue(-10) # 初期値
+        self._zoom_slider.valueChanged.connect(self.zoom_level_changed.emit)
+        zoom_layout.addWidget(self._zoom_slider)
+        view_layout.addLayout(zoom_layout)
+        
+        self._view_group.setLayout(view_layout)
+        layout.addWidget(self._view_group)
 
         # 頂点編集エリア
         self._vertex_group = QGroupBox("Vertex Coordinates (Absolute)")

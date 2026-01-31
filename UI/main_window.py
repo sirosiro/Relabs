@@ -31,6 +31,10 @@ class MainWindow(QMainWindow):
         self.control_panel = ControlPanel(model, selection_manager)
         splitter.addWidget(self.control_panel)
         
+        # イベント接続
+        self.control_panel.grid_visibility_changed.connect(self.viewport.set_grid_visible)
+        self.control_panel.zoom_level_changed.connect(self.viewport.set_zoom)
+
         # 初期分割比率
         splitter.setStretchFactor(0, 3)
         splitter.setStretchFactor(1, 1)
