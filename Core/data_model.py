@@ -129,3 +129,19 @@ class Model(Observable):
             face.remove_observer(self._on_face_changed)
         self._faces.clear()
         self.notify_observers(self)
+
+    # @intent:operation 全ての頂点を指定された量だけ移動させます。
+    # @intent:rationale パフォーマンスとUIの応答性を維持するため、このメソッドはObserver通知の最適化に責任を持つ。
+    # 個々のVertex.setter経由で更新すると、頂点の数だけ通知が飛び、UIの再描画が大量に発生する。
+    # このメソッドは、全頂点の内部変数を直接更新し、最後にModelとして一度だけ通知することで、これを回避する。
+    # このアプローチはVertexのカプセル化を意図的に破るが、許容可能なトレードオフと判断した。
+    def translate_all(self, dx: float, dy: float, dz: float):
+        # 頂点の内部変数を直接更新することで、個別の通知を抑制する。
+        for face in self._faces:
+            for v in face.vertices:
+                v._x += dx
+                v._y += dy
+                v._z += dz
+                
+        # モデル全体としての変更を一度だけ通知する。
+        self.notify_observers(self)

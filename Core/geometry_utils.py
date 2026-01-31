@@ -77,3 +77,21 @@ def ray_intersects_face(
     if t2 is not None:
         return t2
     return None
+
+# @intent:operation 指定されたFaceリストに含まれる全頂点の重心（平均座標）を計算します。
+# @intent:return (x, y, z) のタプル。頂点が存在しない場合は (0.0, 0.0, 0.0) を返します。
+def calculate_center(faces: list[Face]) -> Tuple[float, float, float]:
+    total_x, total_y, total_z = 0.0, 0.0, 0.0
+    count = 0
+    
+    for face in faces:
+        for v in face.vertices:
+            total_x += v.x
+            total_y += v.y
+            total_z += v.z
+            count += 1
+            
+    if count == 0:
+        return (0.0, 0.0, 0.0)
+        
+    return (total_x / count, total_y / count, total_z / count)

@@ -1,7 +1,9 @@
 from PySide6.QtWidgets import (QWidget, QVBoxLayout, QLabel, 
-                               QDoubleSpinBox, QFormLayout, QGroupBox, QHBoxLayout, QCheckBox, QSlider)
+                               QDoubleSpinBox, QFormLayout, QGroupBox, QHBoxLayout, QCheckBox, QSlider,
+                               QRadioButton, QButtonGroup, QStackedWidget)
 from PySide6.QtCore import Qt, Signal
 from Core.data_model import Face
+from Core.geometry_utils import calculate_center
 
 # @intent:responsibility 数値入力とプロパティ編集を担当するウィジェット。
 class ControlPanel(QWidget):
@@ -31,6 +33,23 @@ class ControlPanel(QWidget):
         self._header_label.setStyleSheet("font-weight: bold; font-size: 14px; margin-bottom: 10px;")
         layout.addWidget(self._header_label)
 
+        # モード選択 (Face / Object)
+        mode_layout = QHBoxLayout()
+        self._radio_face = QRadioButton("Face Mode")
+        self._radio_object = QRadioButton("Object Mode")
+        self._radio_face.setChecked(True)
+        
+        self._mode_group = QButtonGroup(self)
+        self._mode_group.addButton(self._radio_face)
+        self._mode_group.addButton(self._radio_object)
+        
+        # モード切り替えイベント
+        self._mode_group.buttonToggled.connect(self._on_mode_changed)
+        
+        mode_layout.addWidget(self._radio_face)
+        mode_layout.addWidget(self._radio_object)
+        layout.addLayout(mode_layout)
+
         # 表示設定エリア
         self._view_group = QGroupBox("View Settings")
         view_layout = QVBoxLayout()
@@ -54,7 +73,10 @@ class ControlPanel(QWidget):
         self._view_group.setLayout(view_layout)
         layout.addWidget(self._view_group)
 
-        # 頂点編集エリア
+        # 編集エリア（スタック切り替え）
+        self._editor_stack = QStackedWidget()
+        
+        # 1. Face Mode Editor (既存の頂点編集)
         self._vertex_group = QGroupBox("Vertex Coordinates (Absolute)")
         # 全体を縦に並べるレイアウト
         main_v_layout = QVBoxLayout()
@@ -98,12 +120,56 @@ class ControlPanel(QWidget):
             main_v_layout.addLayout(row_layout)
                 
         self._vertex_group.setLayout(main_v_layout)
-        layout.addWidget(self._vertex_group)
+        self._editor_stack.addWidget(self._vertex_group)
+        
+        # 2. Object Mode Editor (重心移動)
+        self._object_group = QGroupBox("Object Position (Center)")
+        obj_layout = QFormLayout()
+        
+        self._obj_spinboxes = []
+        for i, axis in enumerate(axes):
+            spin = QDoubleSpinBox()
+            spin.setRange(-1000.0, 1000.0)
+            spin.setSingleStep(0.1)
+            spin.setDecimals(2)
+            
+            # ラベル色
+            label = QLabel(f"{axis}:")
+            label.setStyleSheet(f"color: {axis_colors[i]}; font-weight: bold;")
+            
+            spin.valueChanged.connect(lambda val, a=i: self._on_object_pos_changed(a, val))
+            self._obj_spinboxes.append(spin)
+            obj_layout.addRow(label, spin)
+            
+        self._object_group.setLayout(obj_layout)
+        self._editor_stack.addWidget(self._object_group)
+        
+        layout.addWidget(self._editor_stack)
         
         # 初期状態では無効化
         self._vertex_group.setEnabled(False)
+        self._object_group.setEnabled(True) # Object Modeは常時有効（モデルがあれば）
         
         layout.addStretch()
+
+    # @intent:operation モード切り替え時のUI更新を行います。
+    def _on_mode_changed(self):
+        is_object_mode = self._radio_object.isChecked()
+        self._editor_stack.setCurrentIndex(1 if is_object_mode else 0)
+        
+        if is_object_mode:
+            self._update_object_values()
+            self._header_label.setText("Whole Object")
+        else:
+            # Faceモードに戻ったら選択状態を復元表示
+            face = self._selection_manager.selected_face
+            if face:
+                self._header_label.setText(f"Face ID: {face.id[:8]}...")
+                self._vertex_group.setEnabled(True)
+                self._update_values_from_model()
+            else:
+                self._header_label.setText("No Selection")
+                self._vertex_group.setEnabled(False)
 
     def _on_selection_changed(self, face):
         # 古いFaceの監視解除
@@ -112,19 +178,66 @@ class ControlPanel(QWidget):
 
         self._current_face = face
         
+        # 新しいFaceの監視開始
         if face:
-            self._header_label.setText(f"Face ID: {face.id[:8]}...")
-            self._vertex_group.setEnabled(True)
-            # 新しいFaceの監視開始
-            self._current_face.add_observer(self._on_face_data_changed)
-            self._update_values_from_model()
+            face.add_observer(self._on_face_data_changed)
+
+        # UI更新（モードによって振る舞いが違う）
+        if self._radio_object.isChecked():
+            self._update_object_values()
         else:
-            self._header_label.setText("No Selection")
-            self._vertex_group.setEnabled(False)
+            if face:
+                self._header_label.setText(f"Face ID: {face.id[:8]}...")
+                self._vertex_group.setEnabled(True)
+                self._update_values_from_model()
+            else:
+                self._header_label.setText("No Selection")
+                self._vertex_group.setEnabled(False)
 
     def _on_face_data_changed(self, source):
         # モデル側の変更をUIに反映
-        self._update_values_from_model()
+        if self._radio_object.isChecked():
+            self._update_object_values()
+        else:
+            self._update_values_from_model()
+
+    # @intent:operation モデル全体の重心を計算し、UIに反映します。
+    def _update_object_values(self):
+        if not self._model.faces:
+            self._object_group.setEnabled(False)
+            return
+            
+        self._object_group.setEnabled(True)
+        self._updating_ui = True
+        try:
+            # 重心計算 (Coreのロジックを使用)
+            cx, cy, cz = calculate_center(self._model.faces)
+            
+            for i, val in enumerate([cx, cy, cz]):
+                if self._obj_spinboxes[i].value() != val:
+                    self._obj_spinboxes[i].setValue(val)
+        finally:
+            self._updating_ui = False
+
+    # @intent:operation 重心座標の変更を検知し、全頂点を移動（Translate）させます。
+    def _on_object_pos_changed(self, axis_idx, new_value):
+        if self._updating_ui:
+            return
+
+        # 現在の重心を再計算（基準点）
+        current_center = calculate_center(self._model.faces)
+        current_val = current_center[axis_idx]
+        
+        # 差分移動量
+        delta = new_value - current_val
+        
+        dx, dy, dz = 0.0, 0.0, 0.0
+        if axis_idx == 0: dx = delta
+        elif axis_idx == 1: dy = delta
+        elif axis_idx == 2: dz = delta
+        
+        # モデル一括更新 (Coreのメソッドを使用)
+        self._model.translate_all(dx, dy, dz)
 
     # @intent:operation モデルのデータをUIに反映させます。
     # @intent:rationale 'spinBox.setValue' が 'valueChanged' シグナルを発火させるため、

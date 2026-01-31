@@ -4,10 +4,11 @@ Relabs is a lightweight, face-based 3D modeling tool written in Python. It focus
 
 ## ✨ Features
 
-*   **Face-Based Modeling**: Intuitive manipulation of 3D surfaces.
+*   **Face & Object Modeling**: Intuitive manipulation of 3D surfaces and whole-object translation.
 *   **Real-time Synchronization**: Seamless update between the 3D viewport and the numerical control panel.
-*   **Precise Control**: Edit vertex coordinates directly with absolute precision.
-*   **Visual Aids**: Color-coded coordinate axes gizmo and face highlighting.
+*   **Precise Control**: Edit vertex coordinates or object center directly with absolute precision.
+*   **Visual Aids**: Color-coded coordinate axes gizmo, 3D grid with Y-scale indicators, and face highlighting.
+*   **View Controls**: Intuitive zoom slider and grid toggle directly from the control panel.
 *   **Export Support**: Export models to XML with flexible settings (Coordinate systems, Scope).
 *   **Architecture**: Built with a robust MVC pattern and strict separation of concerns for maintainability.
 

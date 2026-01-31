@@ -36,8 +36,10 @@ Rationale: PySide6のSignal/Slot機構は強力だが、CoreモジュールがGU
     *   **設計意図**: 頂点の変更イベントをバブルアップ（再通知）し、Face自体の変更として扱う。
 *   **`Model`**:
     *   **役割**: 全てのFaceを保持するルートコンテナ。
+    *   **現在の制約**: 現状はFaceのフラットなリストであり、Face間のトポロジー（接続関係）や、複数のFaceをグループ化する`Object/Solid`といった階層構造を持たない。このため、頂点編集のようなトポロジーに依存する操作は現状のデータ構造では困難である。
 
 #### 4.2. Geometry Utils (`geometry_utils.py`)
 *   **役割**: 3D空間におけるレイキャスティング等の計算ロジック。
 *   **関数**:
     *   `ray_intersects_face`: レイと四角形の交差判定（Möller–Trumboreアルゴリズムを使用）。
+    *   `calculate_center`: Faceリストから重心を計算する。
