@@ -2,6 +2,8 @@
 
 Relabs is a lightweight, face-based 3D modeling tool written in Python. It focuses on intuitive manipulation of cubic structures with real-time synchronization between a 3D viewport and precise numerical controls.
 
+![Relabs Screenshot](assets/Relabs-screenshot.png)
+
 ## ✨ Features
 
 *   **Face & Object Modeling**: Intuitive manipulation of 3D surfaces and whole-object translation.
