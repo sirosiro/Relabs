@@ -4,6 +4,7 @@ from Core.data_model import Model, Face, Vertex
 
 # @intent:responsibility モデルデータをXML形式でエクスポートするサービス。
 # @intent:role 座標系の変換やフィルタリングのロジックをカプセル化します。
+# @intent:rationale モデルの純粋性を保つため、座標変換ロジックはCoreではなく本クラス（出力境界）に配置しています。Coreは常に絶対座標のみを扱います。
 class Exporter:
     def __init__(self, model: Model):
         self._model = model

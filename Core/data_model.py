@@ -2,6 +2,7 @@ from typing import List, Callable, Optional
 import uuid
 
 # @intent:responsibility データ変更を監視するための基底クラス。UIフレームワークに依存しないObserverパターンを提供します。
+# @intent:warning 循環参照（Observer <-> Subject）に注意してください。Observerは自身のライフサイクル終了時に必ず remove_observer を呼び出す責務があります。
 class Observable:
     def __init__(self):
         self._observers: List[Callable] = []

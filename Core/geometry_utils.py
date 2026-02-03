@@ -18,6 +18,7 @@ def sub_vectors(v1: Tuple[float, float, float], v2: Tuple[float, float, float]) 
     return (v1[0]-v2[0], v1[1]-v2[1], v1[2]-v2[2])
 
 # @intent:algorithm Möller–Trumbore intersection algorithm
+# @intent:pre-condition `direction` ベクトルは正規化（長さ1）されている必要があります。
 # レイの原点(origin)、方向(dir)、三角形の3頂点(v0, v1, v2)を受け取り、交差距離tを返します。交差しない場合はNone。
 def ray_intersects_triangle(
     origin: Tuple[float, float, float],

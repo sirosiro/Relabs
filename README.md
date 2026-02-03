@@ -49,12 +49,8 @@ Relabs adheres to a strict "Architecture First" philosophy. The project is struc
 
 For more details on the design philosophy and architectural decisions, please refer to the [ARCHITECTURE_MANIFEST.md](./ARCHITECTURE_MANIFEST.md).
 
-## 🤝 Contributing
-
-This project is developed with a unique "AI-Cooperated" workflow.
-Please read [DESIGN_PHILOSOPHY.md](./DESIGN_PHILOSOPHY.md) before contributing to understand our core principles and the role of intent-based coding.
-
 ---
+
 ## Attribution
 
 This project was created with the assistance of
