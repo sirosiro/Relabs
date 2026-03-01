@@ -25,6 +25,7 @@ share/python-wheels/
 .installed.cfg
 *.egg
 MANIFEST
+DESIGN_PHILOSOPHY.md
 
 # PyInstaller
 #  Usually these files are written by a python script, and contain the exe packager
