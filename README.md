@@ -51,6 +51,14 @@ For more details on the design philosophy and architectural decisions, please re
 
 ---
 
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+This project also relies on several open-source libraries. For full details on third-party licenses (NumPy, PyOpenGL, PySide6), please refer to the [THIRDPARTY_LICENSES.md](THIRDPARTY_LICENSES.md) file.
+
+---
+
 ## Attribution
 
 This project was created with the assistance of
