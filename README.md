@@ -39,6 +39,20 @@ Relabs is a lightweight, face-based 3D modeling tool written in Python. It focus
     python main.py
     ```
 
+## 🤖 AI-Human Collaboration
+
+This project demonstrates **AI-Driven Development Level 3 (Autonomous Reasoning)**, where engineers and AI collaborate with an optimized division of labor throughout each phase.
+
+| Phase | AI Role | Engineer Role | Description |
+| :--- | :---: | :---: | :--- |
+| **Requirements** | 30% | 70% | Human defines core requirements, AI structures the specifications. |
+| **Architecture** | 80% | 20% | AI drafts the base structure, Human audits and approves. |
+| **Implementation** | 100% | 0% | AI writes 100% of the code based on the approved manifest. |
+| **Testing** | 50% | 50% | AI handles automated tests, Human focuses on qualitative UX verification. |
+| **Debugging** | 60% | 40% | AI fixes logical bugs, Human resolves environment-specific issues. |
+
+For a detailed analysis, please refer to [aidd_level_for_Relabs_report.md](./docs/history/aidd_level_for_Relabs_report.md).
+
 ## 🏗 Architecture
 
 Relabs adheres to a strict "Architecture First" philosophy. The project is structured using a fractal architecture manifest system.
